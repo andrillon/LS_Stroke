@@ -14,13 +14,15 @@ eeg_files=dir([path_data filesep '*' filesep '*.eeg']);
 addpath(path_fieldtrip);
 ft_defaults;
 
+mkdir([path_data filesep 'SWdetection']);
+
 %%
 sw_thr=[];
 for nF=1:length(eeg_files)
     %%% 1. load EEG data, events and header
     %     data=ft_read_data([eeg_files(nF).folder filesep eeg_files(nF).name]);
     event=ft_read_event([eeg_files(nF).folder filesep eeg_files(nF).name]);
-    header=ft_read_header([eeg_files(nF).folder filesep eeg_files(nF).name]);
+    header=ft_read_headeLSr([eeg_files(nF).folder filesep eeg_files(nF).name]);
     
     filename=eeg_files(nF).name;
     if exist([path_data filesep 'SWdetection' filesep 'SW_all_' filename(1:end-4) '.mat'])==0
@@ -94,7 +96,7 @@ for nF=1:length(eeg_files)
     paramSW.art_ampl=150; % Rejection criterion
     paramSW.max_posampl=75; % Rejection criterion
     paramSW.max_Freq=7; % Rejection criterion
-    paramSW.byElec=1; % Rejection criterion
+    paramSW.byElec=0; % Rejection criterion
     
     % clean SW detection
     if isempty(all_Waves)
