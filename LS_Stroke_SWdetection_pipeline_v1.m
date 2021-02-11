@@ -91,12 +91,12 @@ for nF=1:length(eeg_files)
     % parameters of cleaning SW detection
     paramSW.fixThr=[]; % if you want to use a fix threshold (eg 50) leave empty ([]) if you want to use the relative
     paramSW.prticle_Thr=90; % Choose percentile that you want to select: 80 or 90 or 95
-    paramSW.LimFrqW=[1 4]; % Freq range you want to select: [1 4] or [4 10] in Hz
-    paramSW.AmpCriterionIdx=4; % Criterion to select waves on: 9 (MaxNegpkAmp) or 11 (MaxPosPeakAmp) or 4 (P2P)
-    paramSW.art_ampl=150; % Rejection criterion
-    paramSW.max_posampl=75; % Rejection criterion
-    paramSW.max_Freq=7; % Rejection criterion
-    paramSW.byElec=0; % Rejection criterion
+    paramSW.LimFrqW=[1 4]; % CURRENTLY NOT USED: Freq range you want to select: [1 4] or [4 10] in Hz
+    paramSW.AmpCriterionIdx=4; % Criterion to select waves on: 9 (MaxNegpkAmp) or 11 (MaxPosPeakAmp) or 4 (P2P, peak-to-peak amplitude)
+    paramSW.art_ampl=150; % Rejection criterion (max abs amplitude)
+    paramSW.max_posampl=75; % Rejection criterion (max positive amplitude)
+    paramSW.max_Freq=7; % Rejection criterion (max frequency of individual wave)
+    paramSW.byElec=0; % 1: compute threshold by electrode, 0 across all electrodes
     
     % clean SW detection
     if isempty(all_Waves)
