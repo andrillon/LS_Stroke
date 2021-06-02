@@ -51,7 +51,7 @@ for nF=1:length(eeg_files)
         cfg.dftfreq        = [50];
         
         dataset                   = ft_preprocessing(cfg); % read raw data
-        data=dataset.trial{1};
+        data=dataset.trial{1}; %rows: channels / columns: sample
         
         
         %%% 3. Detect all slow waves candidates
