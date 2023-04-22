@@ -8,7 +8,7 @@ path_save='/Users/thandrillon/Data/StrokeDataEx/SWdetection';
 file_names=dir([path_data filesep '*.mat']);
 
 %%
-redo=1;
+redo=0;
 for nF=1:length(file_names)
     %%% load data
     load([path_data filesep file_names(nF).name]);
