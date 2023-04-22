@@ -3,11 +3,12 @@ close all
 clear all
 
 %%
-path_data='/Users/thandrillon/Data/StrokeDataEx/';
-path_save='/Users/thandrillon/Data/StrokeDataEx/';
+path_data='/Users/thandrillon/Data/StrokeDataEx/EEG';
+path_save='/Users/thandrillon/Data/StrokeDataEx/SWdetection';
 file_names=dir([path_data filesep '*.mat']);
 
 %%
+redo=1;
 for nF=1:length(file_names)
     %%% load data
     load([path_data filesep file_names(nF).name]);
@@ -20,6 +21,7 @@ for nF=1:length(file_names)
     data=data-mean(data,2);
     
     %%% Detect all slow waves
+    if exist([path_save filesep 'allSW_' file_names(nF).name])==0 || redo==1
     [twa_results]=twalldetectnew_TA_v2(data,Fs,0);
     all_Waves=[];
     for nE=1:size(data,1)
@@ -54,6 +56,9 @@ for nF=1:length(file_names)
         % 15: min amplitude on the slow wave window
     end
     save([path_save filesep 'allSW_' file_names(nF).name],'all_Waves','Fs','chan_labels');
+    else
+        load([path_save filesep 'allSW_' file_names(nF).name]);
+    end
     
     %%% Select slow waves
     %%%% parameters to clean SW and select top-amplitude SW
