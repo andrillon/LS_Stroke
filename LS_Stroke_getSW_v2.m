@@ -19,12 +19,12 @@ file_names=dir([path_data filesep '*.mat']);
 %%
 redo=0;
 
-SW_table=array2table(zeros(0,8),'VariableNames',{'SubID','GroupID','Elec','SW_density','SW_amplitude','SW_frequency','SW_downslope','SW_upslope'});
+SW_table=array2table(zeros(0,9),'VariableNames',{'SubID','GroupID','Elec','Block','SW_density','SW_amplitude','SW_frequency','SW_downslope','SW_upslope'});
 SW_table.SubID=categorical(SW_table.SubID);
 SW_table.GroupID=categorical(SW_table.GroupID);
 SW_table.Elec=categorical(SW_table.Elec);
 
-allSW_table=array2table(zeros(0,8),'VariableNames',{'SubID','GroupID','Elec','SW_density','SW_amplitude','SW_frequency','SW_downslope','SW_upslope'});
+allSW_table=array2table(zeros(0,9),'VariableNames',{'SubID','GroupID','Elec','Block','SW_density','SW_amplitude','SW_frequency','SW_downslope','SW_upslope'});
 allSW_table.SubID=categorical(allSW_table.SubID);
 allSW_table.GroupID=categorical(allSW_table.GroupID);
 allSW_table.Elec=categorical(allSW_table.Elec);
@@ -39,7 +39,8 @@ for nF=1:length(file_names)
     FileName=file_names(nF).name;
     separators=findstr(FileName,'_');
     SubID=FileName(1:separators(1)-1);
-    GroupID=FileName(separators(1)+1:separators(end)-1);
+    BlockID=str2num(FileName(separators(2)-1));
+    GroupID=FileName(separators(2)+1:separators(end)-1);
     
     %%% Preprocess
     data=data-repmat(mean(data(match_str(chan_labels,{'TP7','TP8'}),:),1),size(data,1),1);
@@ -50,7 +51,7 @@ for nF=1:length(file_names)
         [twa_results]=twalldetectnew_TA_v2(data,Fs,0);
         all_Waves=[];
         for nE=1:size(data,1)
-            all_Waves=[all_Waves ; [repmat([nF 0 nE],length(abs(cell2mat(twa_results.channels(nE).maxnegpkamp))),1) abs(cell2mat(twa_results.channels(nE).maxnegpkamp))'+abs(cell2mat(twa_results.channels(nE).maxpospkamp))' ...
+            all_Waves=[all_Waves ; [repmat([nF BlockID nE],length(abs(cell2mat(twa_results.channels(nE).maxnegpkamp))),1) abs(cell2mat(twa_results.channels(nE).maxnegpkamp))'+abs(cell2mat(twa_results.channels(nE).maxpospkamp))' ...
                 cell2mat(twa_results.channels(nE).negzx)' ...
                 cell2mat(twa_results.channels(nE).poszx)' ...
                 cell2mat(twa_results.channels(nE).wvend)' ...
@@ -129,6 +130,7 @@ for nF=1:length(file_names)
     table_length=size(SW_table,1);
     SW_table.SubID(table_length+(1:length(chan_labels)))=repmat({SubID},length(chan_labels),1);
     SW_table.GroupID(table_length+(1:length(chan_labels)))=repmat({GroupID},length(chan_labels),1);
+    SW_table.BlockID(table_length+(1:length(chan_labels)))=repmat(BlockID,length(chan_labels),1);
     SW_table.Elec(table_length+(1:length(chan_labels)))=chan_labels;
     SW_table.SW_density(table_length+(1:length(chan_labels)))=slow_Waves_perE(:,1);
     SW_table.SW_amplitude(table_length+(1:length(chan_labels)))=slow_Waves_perE(:,2);
@@ -139,6 +141,7 @@ for nF=1:length(file_names)
     table_length=size(allSW_table,1);
     allSW_table.SubID(table_length+(1:length(chan_labels)))=repmat({SubID},length(chan_labels),1);
     allSW_table.GroupID(table_length+(1:length(chan_labels)))=repmat({GroupID},length(chan_labels),1);
+    allSW_table.BlockID(table_length+(1:length(chan_labels)))=repmat(BlockID,length(chan_labels),1);
     allSW_table.Elec(table_length+(1:length(chan_labels)))=chan_labels;
     allSW_table.SW_density(table_length+(1:length(chan_labels)))=allSlow_Waves_perE(:,1);
     allSW_table.SW_amplitude(table_length+(1:length(chan_labels)))=allSlow_Waves_perE(:,2);
