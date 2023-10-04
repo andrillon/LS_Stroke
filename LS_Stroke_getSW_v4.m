@@ -19,6 +19,17 @@ IDs = {'HN966'; 'HN968'; 'HN969'; 'HN970'; 'HN971'; 'HN972'; 'HN973'; 'HN974'; '
     'S025'; 'S026'; 'S027'; 'S029'; 'S030'; 'S031'; 'S032'; 'S033'; 'S103'; 'S104'; ...
     'S107';'S109'; 'S111'; 'S112'; 'S114'; 'S115'; 'S201'; 'S202'; 'S207' };
 
+%%%%%% Events description
+%      4: central fixation
+%      5: random motion
+%     12: response
+%     13: ??? 
+%     28: fixation break
+% [101 105 109]; % left patch, up motion
+% [102 106 110]; % left patch, down motion
+% [103 107 111]; % right patch, up motion
+% [104 108 112]; % right patch, down motion
+
     %%
     redo=0;
     
