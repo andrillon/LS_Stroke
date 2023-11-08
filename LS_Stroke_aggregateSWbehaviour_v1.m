@@ -8,16 +8,16 @@ if isempty(findstr(pwd,'thandrillon'))==0
     path_LSCPtools='/Users/thandrillon/WorkGit/LSCPtools/';
 elseif isempty(findstr(pwd,'Daniel'))==0
     path_data = '/fs04/so34/Daniel/Data/Raw';
-    path_save = '/fs04/so34/Daniel/SWdetection';
+    path_save = '/fs04/so34/Daniel/Data/SWdetection';
     path_LSCPtools = '/fs04/so34/LocalSleep/Stroke/Scripts';
 end
 addpath(genpath(path_LSCPtools));
-IDs = {'HN966'; 'HN968'; 'HN969'; 'HN970'; 'HN971'; 'HN972'; 'HN973'; 'HN974'; 'HN976'; 'HN977'; ...
-    'HN978'; 'HN980'; 'HN9881'; 'HN982'; 'HN983'; 'HN985'; 'HN986'; 'HN987'; 'HN988'; 'HN989'; ...
-    'HN990'; 'HN992'; 'HN993'; 'HN994'; 'HN995'; 'HN998'; 'HN999'; 'S002'; 'S003'; 'S004'; ...
-    'S009'; 'S010'; 'S012'; 'S013'; 'S014'; 'S016';'S017'; 'S018'; 'S020'; 'S021'; ...
-    'S025'; 'S026'; 'S027'; 'S029'; 'S030'; 'S031'; 'S032'; 'S033'; 'S103'; 'S104'; ...
-    'S107';'S109'; 'S111'; 'S112'; 'S114'; 'S115'; 'S201'; 'S202'; 'S207' };
+IDs = {'HN996'; 'HN968'; 'HN969'; 'HN970'; 'HN971'; 'HN972'; 'HN973'; 'HN974'; 'HN976'; 'HN977'; ...
+       'HN978'; 'HN980'; 'HN981'; 'HN982'; 'HN983'; 'HN985'; 'HN986'; 'HN987'; 'HN988'; 'HN989'; ...
+       'HN990'; 'HN992'; 'HN993'; 'HN994'; 'HN995'; 'HN998'; 'HN999'; 'S002'; 'S003'; 'S004'; ...
+       'S010'; 'S012'; 'S013'; 'S014'; 'S016';'S017'; 'S018'; 'S020'; 'S025'; 'S026'; ...
+       'S027'; 'S029'; 'S030'; 'S031'; 'S032'; 'S033'; 'S103'; 'S104'; 'S107';'S109'; ...
+       'S111'; 'S112'; 'S114'; 'S115'; 'S201'; 'S202'; 'S207' };
 
 %%%%%% Events description
 %      4: central fixation
@@ -40,13 +40,15 @@ behav_SW_table.GroupID=categorical(behav_SW_table.GroupID);
 behav_SW_table.Elec=categorical(behav_SW_table.Elec);
 behav_SW_table.StimSide=categorical(behav_SW_table.StimSide);
 
+load([path_save filesep 'SW_individualThreshold_withICA4_subGroups.mat'],'SW_table');
+
 %     allSW_table=array2table(zeros(0,9),'VariableNames',{'SubID','GroupID','Elec','Block','SW_density','SW_amplitude','SW_frequency','SW_downslope','SW_upslope'});
 %     allSW_table.SubID=categorical(allSW_table.SubID);
 %     allSW_table.GroupID=categorical(allSW_table.GroupID);
 %     allSW_table.Elec=categorical(allSW_table.Elec);
 
 for idx = 1:length(IDs)
-    file_names=dir([path_data filesep IDs{idx} '*.mat']);
+    file_names=dir([path_data filesep IDs{idx} filesep IDs{idx} '*.mat']);
     if isempty(file_names)
         continue;
     end
@@ -61,7 +63,8 @@ for idx = 1:length(IDs)
         separators=findstr(FileName,'_');
         SubID=FileName(1:separators(1)-1);
         BlockID=str2num(FileName(separators(2)-1));
-        GroupID=FileName(separators(2)+1:separators(end)-1);
+        GroupID=cell2mat(SW_table.subGroupID(find(ismember(SW_table.SubID(:,1),SubID),1)));
+%         GroupID=FileName(separators(2)+1:separators(end)-1);
         
         load([path_save filesep 'SW_' file_names(nF).name]); %,'slow_Waves','Fs','chan_labels');
         
@@ -125,7 +128,11 @@ for idx = 1:length(IDs)
             behav_SW_table.Block(table_length+(1:length(chan_labels)))=repmat(BlockID,length(chan_labels),1);
             behav_SW_table.Elec(table_length+(1:length(chan_labels)))=chan_labels;
             
-            behav_SW_table.TrialCond(table_length+(1:length(chan_labels)))=repmat(trial_coherent_cond,length(chan_labels),1);
+            if length(trial_coherent_cond)> 1
+                behav_SW_table.TrialCond(table_length+(1:length(chan_labels)))=repmat(trial_coherent_cond(1),length(chan_labels),1);
+            else
+                behav_SW_table.TrialCond(table_length+(1:length(chan_labels)))=repmat(trial_coherent_cond,length(chan_labels),1);
+            end
             behav_SW_table.StimSide(table_length+(1:length(chan_labels)))=repmat({StimSide},length(chan_labels),1);
             behav_SW_table.Response(table_length+(1:length(chan_labels)))=repmat(Response,length(chan_labels),1);
             behav_SW_table.FixBreak(table_length+(1:length(chan_labels)))=repmat(FixBreak,length(chan_labels),1);
