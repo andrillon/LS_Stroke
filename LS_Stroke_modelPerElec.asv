@@ -22,12 +22,10 @@ SW_table.StrokeCond=removecats(SW_table.StrokeCond);
 %%
 SW_table.Elec=categorical(SW_table.Elec);
 SW_table.SubID=categorical(SW_table.SubID);
-SW_table.GroupID=categorical(SW_table.GroupID);
 SW_table(SW_table.FixBreak==1,:)=[];
 SW_table.TrialCond=categorical(SW_table.TrialCond);
 SW_table.StimSide=categorical(SW_table.StimSide);
 SW_table(SW_table.StimSide=='Undefined',:)=[];
-SW_table.StimSide=removecats(SW_table.StimSide);
 
 %%
 cfg=[];
@@ -37,9 +35,9 @@ layout = ft_prepare_layout(cfg);
 Group_effect=[];
 for nCh=1:length(layout.label)-2
     sub_table=SW_table(SW_table.Elec==layout.label{nCh},:);
-    mdl=fitlme(sub_table,'Response~1+StimSide*GroupID*SW+(1|SubID)');
-    Group_effect(nCh,1)=mdl.Coefficients.tStat(match_str(mdl.Coefficients.Name,'SW'));
-    Group_effect(nCh,2)=mdl.Coefficients.pValue(match_str(mdl.Coefficients.Name,'SW'));
+    mdl=fitlme(sub_table,'Response~1+StimSide*StrokeCond+SW+(1|SubID)');
+    Group_effect(nCh,1)=mdl.Coefficients.tStat(find_trials(mdl.Coefficients.Name,'SW'));
+    Group_effect(nCh,2)=mdl.Coefficients.pValue(find_trials(mdl.Coefficients.Name,'SW'));
     
 end
 
