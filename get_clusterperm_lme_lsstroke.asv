@@ -31,7 +31,7 @@ if size(model_est{2},2)==6 % ???
                     end
                     if clus_found==0
                         num_clus=size(real_clus{nsign},1);
-                        real_clus{nsign}{num_clus+1,1}= {neighbours(sig_elec(nEl)).label};
+                        real_clus{nsign}{num_clus+1,1}= {neighbours(sig_elec(nEl)).label'};
                         real_clus{nsign}{num_clus+1,3}=tstat_elec(nEl);
                         real_clus{nsign}{num_clus+1,2}=neighbours(sig_elec(nEl)).neighblabel';
                     end
@@ -74,7 +74,7 @@ if size(model_est{2},2)==6 % ???
                     tstat_elec=model_est{2}(model_est{2}(:,4)<clus_alpha & model_est{2}(:,3)<0 & model_est{2}(:,5)==nperm & model_est{2}(:,6)==nCond,3);
                 end
                 if ~isempty(sig_elec)
-                    perm_clus{nsign,nperm}{1,1}={neighbours(sig_elec(1)).label};
+                    perm_clus{nsign,nperm}{1,1}={neighbours(sig_elec(1)).label'};
                     perm_clus{nsign,nperm}{1,3}=tstat_elec(1);
                     perm_clus{nsign,nperm}{1,2}=neighbours(sig_elec(1)).neighblabel';
                     for nEl=2:length(sig_elec)
@@ -90,7 +90,7 @@ if size(model_est{2},2)==6 % ???
                         end
                         if clus_found==0
                             num_clus=size(perm_clus{nsign,nperm},1);
-                            perm_clus{nsign,nperm}{num_clus+1,1}= {neighbours(sig_elec(nEl)).label};
+                            perm_clus{nsign,nperm}{num_clus+1,1}= {neighbours(sig_elec(nEl)).label'};
                             perm_clus{nsign,nperm}{num_clus+1,3}=tstat_elec(nEl);
                             perm_clus{nsign,nperm}{num_clus+1,2}=neighbours(sig_elec(nEl)).neighblabel';
                         end
