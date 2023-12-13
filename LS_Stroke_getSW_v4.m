@@ -3,8 +3,8 @@ close all
 clear all
 
 if isempty(findstr(pwd,'thandrillon'))==0
-    path_data = '/Users/thandrillon/Data/StrokeDataEx/EEG';
-    path_save = '/Users/thandrillon/Data/StrokeDataEx/SWdetection';
+    path_data = '/Users/thandrillon/Data/StrokeData/EEG';
+    path_save = '/Users/thandrillon/Data/StrokeData/SWdetection';
     path_LSCPtools='/Users/thandrillon/WorkGit/LSCPtools/';
 elseif isempty(findstr(pwd,'Daniel'))==0
     path_data = '/fs04/so34/Daniel/Data/Raw';
