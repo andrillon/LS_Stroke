@@ -151,7 +151,7 @@ layout = ft_prepare_layout(cfg);
 LeftStroke_effect=[]; RightStroke_effect=[];
 % mdl=fitlme(SW_table,'SW_density~subGroupID*Elec + (1|SubID)'); % Mark
 SWdens_est=cell(1,2);
-totperm=500;
+totperm=10;
 for nCh=1:length(layout.label)-2
     sub_table=SW_table(SW_table.Elec==layout.label{nCh},:);
     mdl=fitlme(sub_table,'SW_density~1+subGroupID+(1|SubID)');
