@@ -3,8 +3,8 @@ close all
 clear all
 
 if isempty(findstr(pwd,'thandrillon'))==0
-    path_data = '/Users/thandrillon/Data/StrokeDataEx/EEG';
-    path_save = '/Users/thandrillon/Data/StrokeDataEx/SWdetection';
+    path_data = '/Users/thandrillon/Data/StrokeData/EEG';
+    path_save = '/Users/thandrillon/Data/StrokeData/SWdetection';
     path_LSCPtools='/Users/thandrillon/WorkGit/LSCPtools/';
 elseif isempty(findstr(pwd,'Daniel'))==0
     path_data = '/fs04/so34/Daniel/Data/Raw';
@@ -35,7 +35,10 @@ IDs = {'HN996'; 'HN968'; 'HN969'; 'HN970'; 'HN971'; 'HN972'; 'HN973'; 'HN974'; '
 for idx = 1:length(IDs)
     file_names=dir([path_data filesep IDs{idx} filesep IDs{idx} '*.mat']);
     if isempty(file_names)
-        continue;
+        file_names=dir([path_data filesep IDs{idx} '*.mat']);
+        if isempty(file_names)
+            continue;
+        end
     end
     for nF=1:length(file_names)
         %%% load data
