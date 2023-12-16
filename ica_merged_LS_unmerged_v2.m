@@ -89,11 +89,11 @@ for idx = 1:length(IDs)
         FileName=file_names(nF).name;
         separators=findstr(FileName,'_');
         SubID=FileName(1:separators(1)-1);
-        BlockID=str2num(FileName(separators(2)-1));
+        BlockID=str2num(FileName(separators(1)+6:separators(2)-1));
         GroupID=FileName(separators(2)+1:separators(end)-1);
         
         %%% Preprocess
-        data=data-repmat(mean(data(match_str(chan_labels,{'TP7','TP8'}),:),1),size(data,1),1);
+        ferdata=data-repmat(mean(data(match_str(chan_labels,{'TP7','TP8'}),:),1),size(data,1),1);
         data=data-mean(data,2);
         
         %%% Detect all slow waves
