@@ -20,6 +20,7 @@
      load('/Users/thandrillon/WorkGit/projects/inprogress/LS_Stroke/chanlocs_Monash.mat');
      SW_table=readtable([path_temp 'SW_individualThreshold.csv']);
      A=load([path_temp 'SW_individualThreshold_withICA4_subGroups.mat']);
+     commonChans=A.commonChans;
 end
 % Reorder for L vs R comparison
 SW_table.SubID=categorical(SW_table.SubID);
@@ -30,40 +31,12 @@ uniqueSubIDs=unique(SW_table.SubID);
 SW_table.subGroupID=nan(size(SW_table,1),1);
 SW_table.subGroupID=categorical(SW_table.subGroupID);
 for nSub=1:length(uniqueSubIDs)
-    SW_table.sub(SW_table.SubID==uniqueSubIDs(nSub))=unique(A.SW_table.subGroupID(A.SW_table.SubID==uniqueSubIDs(nSub)));
+    SW_table.subGroupID(SW_table.SubID==uniqueSubIDs(nSub))=unique(A.SW_table.subGroupID(A.SW_table.SubID==uniqueSubIDs(nSub)));
 end
-% SW_table_reorder=SW_table;
-% SW_table_reorder.subGroupID=reordercats(SW_table_reorder.subGroupID,{'left_stroke','right_stroke','healthy_old'});
+SW_table_reorder=SW_table;
+SW_table_reorder.subGroupID=reordercats(SW_table_reorder.subGroupID,{'left_stroke','right_stroke','healthy_old'});
 
-% Mark's suggested analysis
-% SW_table2=SW_table; % Copy the table
-% SW_table2(~ismember(SW_table2.Elec,commonChans),:)=[]; % Remove rows where the electrode is not common across sites
-% 
-% subGroupID2=zeros(height(SW_table2),1); % Create blank subGroupID variable
-% subGroupID2(ismember(SW_table2.subGroupID,'healthy_old'))=1; % Set rows with healthy older to 1
-% subGroupID2(ismember(SW_table2.subGroupID,'left_stroke'))=2; % Set rows with left stroke to 2
-% subGroupID2(ismember(SW_table2.subGroupID,'right_stroke'))=3; % Set rows with right stroke to 3
-% 
-% Elec2=zeros(height(SW_table2),1); % Create blank electrode variable
-% for elec=1:59 % For all electrodes
-%     currelec=commonChans(elec); % Choose one electrode from common chans
-%     Elec2(ismember(SW_table2.Elec,currelec))=elec; % Set all rows with that electrode label to the same number
-% end
-% 
-% SubID2=zeros(height(SW_table2),1); % Create blank SubID variable
-% allsubs=unique(SW_table2.SubID); % Get all SubIDs
-% for sub=1:57 % For all subjects
-%     currsub=allsubs(sub); % Choose one SubID from list
-%     SubID2(ismember(SW_table2.SubID,currsub))=sub; % Set all rows with that participant label to the same number
-% end
-% 
-% SW_table2.SubID2=SubID2; % Add new sub IDs to table
-% SW_table2.SubID2=nominal(SW_table2.SubID2); % Convert new sub IDs to nominal
-% SW_table2.subGroupID2=subGroupID2; % Add new group IDs to table
-% SW_table2.subGroupID2=nominal(SW_table2.subGroupID2); % Convert new group IDs to nominal
-% SW_table2.Elec2=Elec2; % Add new sub IDs to table
-% SW_table2.Elec2=nominal(SW_table2.Elec2); % Convert new sub IDs to nominal
-
+%%
 cfg = [];
 cfg.layout = 'biosemi64.lay';
 layout = ft_prepare_layout(cfg);
@@ -80,14 +53,18 @@ layout = ft_prepare_layout(cfg);
 LeftStroke_effect=[]; RightStroke_effect=[];
 % mdl=fitlme(SW_table,'SW_density~subGroupID*Elec + (1|SubID)'); % Mark
 SWdens_est=cell(1,2);
-totperm=10;
+totperm=500;
 for nCh=1:length(layout.label)-2
     sub_table=SW_table(SW_table.Elec==layout.label{nCh},:);
     mdl=fitlme(sub_table,'SW_density~1+subGroupID+(1|SubID)');
-    [real_out, cont_out, perm_out, cont_perm_out, out_pred_perm]=lme_perm_lsstroke(sub_table,'subGroupID','SW_density~1+Block+pred+(1|SubID)',totperm);
-    
+    if nCh==1
+        out_pred_perm=[];
+        [real_out, cont_out, perm_out, cont_perm_out, out_pred_perm]=lme_perm_lsstroke(sub_table,'subGroupID','SW_density~1+Block+pred+(1|SubID)',totperm);
+    else
+        [real_out, cont_out, perm_out, cont_perm_out, next_out_pred_perm]=lme_perm_lsstroke(sub_table,'subGroupID','SW_density~1+Block+pred+(1|SubID)',totperm,out_pred_perm);
+    end
     SWdens_est{1}=[SWdens_est{1} ; [nCh*ones(3,1) real_out]];
-            SWdens_est{2}=[SWdens_est{2} ; [nCh*ones(totperm*3,1) perm_out]];
+    SWdens_est{2}=[SWdens_est{2} ; [nCh*ones(totperm*3,1) perm_out]];
 end
 
 %% Filter clusters

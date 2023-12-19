@@ -53,14 +53,18 @@ layout = ft_prepare_layout(cfg);
 LeftStroke_effect=[]; RightStroke_effect=[];
 % mdl=fitlme(SW_table,'SW_density~subGroupID*Elec + (1|SubID)'); % Mark
 SWdens_est=cell(1,2);
-totperm=500;
+totperm=10;
 for nCh=1:length(layout.label)-2
     sub_table=SW_table(SW_table.Elec==layout.label{nCh},:);
     mdl=fitlme(sub_table,'SW_density~1+subGroupID+(1|SubID)');
-    [real_out, cont_out, perm_out, cont_perm_out, out_pred_perm]=lme_perm_lsstroke(sub_table,'subGroupID','SW_density~1+Block+pred+(1|SubID)',totperm);
-    
+    if nCh==1
+        out_pred_perm=[];
+        [real_out, cont_out, perm_out, cont_perm_out, out_pred_perm]=lme_perm_lsstroke(sub_table,'subGroupID','SW_density~1+Block+pred+(1|SubID)',totperm);
+    else
+        [real_out, cont_out, perm_out, cont_perm_out, next_out_pred_perm]=lme_perm_lsstroke(sub_table,'subGroupID','SW_density~1+Block+pred+(1|SubID)',totperm,out_pred_perm);
+    end
     SWdens_est{1}=[SWdens_est{1} ; [nCh*ones(3,1) real_out]];
-            SWdens_est{2}=[SWdens_est{2} ; [nCh*ones(totperm*3,1) perm_out]];
+    SWdens_est{2}=[SWdens_est{2} ; [nCh*ones(totperm*3,1) perm_out]];
 end
 
 %% Filter clusters

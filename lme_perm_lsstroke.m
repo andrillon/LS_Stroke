@@ -36,18 +36,19 @@ if strcmp(predictor,'subGroupID')
     cont_perm_out=[];
     fprintf('%4.0f/%4.0f\n',0,totperm)
     for np=1:totperm
-        %         if size(all_pred_perm,1)~=totperm
-        group_perm_idx=1:length(uniqueGroups);
-        group_perm_idx=group_perm_idx(randperm(length(group_perm_idx)));
+        if size(all_pred_perm,1)~=totperm
+            group_perm_idx=1:length(uniqueGroups);
+            group_perm_idx=group_perm_idx(randperm(length(group_perm_idx)));
+            out_pred_perm(np,:)=group_perm_idx;
+        else
+            group_perm_idx=all_pred_perm(np,:)';
+            out_pred_perm(np,:)=group_perm_idx;
+        end
         uniqueGroups_perm=uniqueGroups(group_perm_idx);
         table_perm=table;
         for nS=1:length(uniqueIDs)
             table_perm.pred(table.SubID==uniqueIDs(nS))=uniqueGroups_perm(nS);
         end
-        out_pred_perm(np,:)=group_perm_idx;
-        %         else
-        %             pred_perm_idx=all_pred_perm(np,:)';
-        %         end
         model_perm= fitlme(table_perm,formula);
         ContNames=unique(table_perm.pred);
         for nCond=1:2
