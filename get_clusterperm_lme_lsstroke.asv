@@ -279,7 +279,9 @@ else
 
                     end
                 end
-                perm_clus{nsign,nperm}(clus_merged,:)=[];                
+                perm_clus{nsign,nperm}(clus_merged,:)=[];
+            else
+                
             end
         end
     end
