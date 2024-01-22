@@ -38,6 +38,22 @@ SW_table_reorder=SW_table;
 SW_table_reorder.subGroupID=reordercats(SW_table_reorder.subGroupID,{'left_stroke','right_stroke','healthy_old'});
 
 %%
+normSW_table=SW_table_reorder;
+normSW_table(normSW_table.GroupID=='healthy_old',:)=[];
+normSW_table.GroupID=removecats(normSW_table.GroupID);
+normSW_table.subGroupID=removecats(normSW_table.subGroupID);
+uniqueSubIDs=unique(normSW_table.SubID);
+uniqueBlockIDs=unique(normSW_table.Block);
+for nSub=1:length(uniqueSubIDs)
+    for nBlock=1:length(uniqueBlockIDs)
+        sub_normSW_table=normSW_table(normSW_table.SubID==uniqueSubIDs(nSub) & normSW_table.Block==uniqueBlockIDs(nBlock),:);
+        if ~isempty(sub_normSW_table)
+            sub_normSW_table.SW_density=zscore(sub_normSW_table.SW_density);
+            normSW_table(normSW_table.SubID==uniqueSubIDs(nSub) & normSW_table.Block==uniqueBlockIDs(nBlock),:)=sub_normSW_table;
+        end
+    end
+end
+%%
 cfg = [];
 cfg.layout = 'biosemi64.lay';
 layout = ft_prepare_layout(cfg);
@@ -50,6 +66,7 @@ cfg.channel = layout.label(a);
 cfg.center = 'yes';
 layout = ft_prepare_layout(cfg);
 
+%%
 % Density
 LeftStroke_effect=[]; RightStroke_effect=[];
 % mdl=fitlme(SW_table,'SW_density~subGroupID*Elec + (1|SubID)'); % Mark
@@ -138,42 +155,62 @@ for nCond=1:3
 end
 
 %%
+cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
+
+figure;
+simpleTopoPlot_ft(LeftStroke_effect(:,1), layout,'on',[],0,1);
+ft_plot_lay_me(layout, 'chanindx', find(LeftStroke_effect(:,2)<0.05), 'pointsymbol','o','pointcolor','green','pointsize',36,'box','no','label','no')
+ft_plot_lay_me(layout, 'chanindx', find(LeftStroke_effect(:,2)<fdr(LeftStroke_effect(:,2),0.05)), 'pointsymbol','o','pointcolor','k','pointsize',36,'box','no','label','no')
+colorbar;
+colormap(cmap2);
+caxis([-1 1]*max(abs(LeftStroke_effect(:,1))))
+title('Healthy x Left Stroke ~ SW Density');
+
+figure;
+simpleTopoPlot_ft(RightStroke_effect(:,1), layout,'on',[],0,1);
+ft_plot_lay_me(layout, 'chanindx', find(RightStroke_effect(:,2)<0.05), 'pointsymbol','o','pointcolor','green','pointsize',36,'box','no','label','no')
+ft_plot_lay_me(layout, 'chanindx', find(RightStroke_effect(:,2)<fdr(RightStroke_effect(:,2),0.05)), 'pointsymbol','o','pointcolor','k','pointsize',36,'box','no','label','no')
+colorbar;
+colormap(cmap2);
+caxis([-1 1]*max(abs(RightStroke_effect(:,1))))
+title('Healthy x Right Stroke ~ SW Density');
+
+
+%%
 % And then left vs right stroke
+TopoLeft=[];
+TopoRight=[];
 for nCh=1:length(layout.label)-2
-    sub_table=SW_table_reorder(SW_table_reorder.Elec==layout.label{nCh},:);
-    mdl=fitlme(sub_table,'SW_density~1+Block+subGroupID+(1+Block|SubID)');
+    sub_table=normSW_table(normSW_table.Elec==layout.label{nCh},:);
+    mdl=fitlme(sub_table,'SW_density~1+subGroupID+(1|SubID)');
     LxR_effect(nCh,1)=mdl.Coefficients.tStat(find_trials(mdl.Coefficients.Name,'right'));
     LxR_effect(nCh,2)=mdl.Coefficients.pValue(find_trials(mdl.Coefficients.Name,'right'));
+
+    TopoLeft(nCh)=mean(normSW_table.SW_density(normSW_table.Elec==layout.label{nCh} & normSW_table.subGroupID=='left_stroke'));
+    TopoRight(nCh)=mean(normSW_table.SW_density(normSW_table.Elec==layout.label{nCh} & normSW_table.subGroupID=='right_stroke'));
 end
 
 cmap2=cbrewer('div','RdBu',64); cmap2=flipud(cmap2);
-
-% figure;
-% simpleTopoPlot_ft(LeftStroke_effect(:,1), layout,'on',[],0,1);
-% ft_plot_lay_me(layout, 'chanindx', find(LeftStroke_effect(:,2)<0.05), 'pointsymbol','o','pointcolor','green','pointsize',36,'box','no','label','no')
-% ft_plot_lay_me(layout, 'chanindx', find(LeftStroke_effect(:,2)<fdr(LeftStroke_effect(:,2),0.05)), 'pointsymbol','o','pointcolor','k','pointsize',36,'box','no','label','no')
-% colorbar;
-% colormap(cmap2);
-% caxis([-1 1]*max(abs(LeftStroke_effect(:,1))))
-% title('Healthy x Left Stroke ~ SW Density');
+figure;
+subplot(1,3,1)
+simpleTopoPlot_ft(TopoLeft, layout,'on',[],0,1); hold on;
+colorbar; caxis([-1 1]*0.7)
+title('Left SW density norm');
+subplot(1,3,2)
+simpleTopoPlot_ft(TopoRight, layout,'on',[],0,1); hold on;
+colorbar; caxis([-1 1]*0.7)
+title('Right SW density norm');
+subplot(1,3,3)
+% colorbar; caxis([-1 1]*0.7)
 % 
 % figure;
-% simpleTopoPlot_ft(RightStroke_effect(:,1), layout,'on',[],0,1);
-% ft_plot_lay_me(layout, 'chanindx', find(RightStroke_effect(:,2)<0.05), 'pointsymbol','o','pointcolor','green','pointsize',36,'box','no','label','no')
-% ft_plot_lay_me(layout, 'chanindx', find(RightStroke_effect(:,2)<fdr(RightStroke_effect(:,2),0.05)), 'pointsymbol','o','pointcolor','k','pointsize',36,'box','no','label','no')
-% colorbar;
-% colormap(cmap2);
-% caxis([-1 1]*max(abs(RightStroke_effect(:,1))))
-% title('Healthy x Right Stroke ~ SW Density');
-
-figure;
 simpleTopoPlot_ft(LxR_effect(:,1), layout,'on',[],0,1); hold on;
-% ft_plot_lay_me(layout, 'chanindx', find(LxR_effect(:,2)<0.05), 'pointsymbol','o','pointcolor','green','pointsize',36,'box','no','label','no')
-% ft_plot_lay_me(layout, 'chanindx', find(LxR_effect(:,2)<fdr(LxR_effect(:,2),0.05)), 'pointsymbol','o','pointcolor','k','pointsize',36,'box','no','label','no')
+ft_plot_lay_me(layout, 'chanindx', find(LxR_effect(:,2)<0.05), 'pointsymbol','o','pointcolor','green','pointsize',36,'box','no','label','no')
+ft_plot_lay_me(layout, 'chanindx', find(LxR_effect(:,2)<fdr(LxR_effect(:,2),0.05)), 'pointsymbol','o','pointcolor','k','pointsize',36,'box','no','label','no')
 colorbar;
 colormap(cmap2);
 caxis([-1 1]*max(abs(LxR_effect(:,1))))
-title('Left x Right Stroke ~ SW Density');
+title('Left vs Right');
 
 %% Cluster Permutations
 clusteralpha = 0.05;
