@@ -10,7 +10,7 @@ if isempty(findstr(pwd,'thandrillon'))==0
     addpath(path_eeglab);
     addpath(path_TESA);
     addpath(genpath('/Users/thandrillon/WorkLocal/local/FastICA_25/'))
-     path_temp=('/Users/thandrillon/WorkGit/projects/inprogress/LS_Stroke/');
+    path_temp=('/Users/thandrillon/WorkGit/projects/inprogress/LS_Stroke/');
 elseif isempty(findstr(pwd,'Daniel'))==0
     path_data = '/fs04/so34/Daniel/Data/Raw';
     path_save = '/fs04/so34/Daniel/Data/SWdetection';
@@ -40,6 +40,7 @@ SW_table.Elec=categorical(SW_table.Elec);
 %     allSW_table.GroupID=categorical(allSW_table.GroupID);
 %     allSW_table.Elec=categorical(allSW_table.Elec);
 CommonChannels=[];
+nFc=0;
 for idx = 1:length(IDs)
     EEG = []; ALLEEG = [];
 
@@ -60,8 +61,8 @@ for idx = 1:length(IDs)
         BlockID=str2num(FileName(separators(1)+6:separators(2)-1));
         GroupID=FileName(separators(2)+1:separators(end)-1);
         if BlockID>9
-           fprintf('... %s - %2.0f - %s SKIPPING\n',SubID,BlockID,GroupID)
-         continue;
+            fprintf('... %s - %2.0f - %s SKIPPING\n',SubID,BlockID,GroupID)
+            continue;
         end
         if exist([path_save filesep 'allSW_' file_names(nF).name])==0
             fprintf('... %s - %2.0f - %s MISSING\n',SubID,BlockID,GroupID)
@@ -113,99 +114,81 @@ for idx = 1:length(IDs)
         end
         slow_Waves=[slow_Waves ; thisE_Waves(temp_p2p>thr_Wave(nE),:)];
     end
-    save([path_save filesep 'SW_' IDs{idx}],'slow_Waves','Fs','chan_labels');
 
+    %%% Get ERP by block
+    FileNamesSep=split(file_names(nF).name,'_');
+    ERP_SW=cell(1,length(chan_labels));
     for nB=1:size(BlockInfo,1)
-        slow_Waves_perE=[];
-
+        load([file_names(BlockInfo(nB,1)).folder filesep file_names(BlockInfo(nB,1)).name]);
+        chan_labels={EEG_120Hz.chanlocs.labels};
+        data=EEG_120Hz.data;
+        Fs=EEG_120Hz.srate;
+        temp_data=data-repmat(mean(data(match_str(chan_labels,{'TP7','TP8'}),:),1),[length(chan_labels) 1]);
         for nE=1:length(chan_labels)
-            slow_Waves_perE=[slow_Waves_perE ; [sum(slow_Waves(slow_Waves(:,2)==BlockInfo(nB,4),3)==nE)/BlockInfo(nB,3) nanmean(slow_Waves(slow_Waves(:,3)==nE & slow_Waves(:,2)==BlockInfo(nB,4),4)) nanmean(1./((slow_Waves(slow_Waves(:,3)==nE & slow_Waves(:,2)==BlockInfo(nB,4),7)-slow_Waves(slow_Waves(:,3)==nE & slow_Waves(:,2)==BlockInfo(nB,4),5))/Fs)) ...
-                nanmean(slow_Waves(slow_Waves(:,3)==nE & slow_Waves(:,2)==BlockInfo(nB,4),12)) nanmean(slow_Waves(slow_Waves(:,3)==nE & slow_Waves(:,2)==BlockInfo(nB,4),13))]];
+            temp_slow_Waves=slow_Waves(slow_Waves(:,2)==BlockInfo(nB,4) & slow_Waves(:,3)==nE,:);
+            if isempty(temp_slow_Waves)
+                continue;
+            end
+
+            for nW=1:size(temp_slow_Waves,1)
+                if min((-0.3*Fs:Fs)+temp_slow_Waves(nW,5))>0 && max((-0.3*Fs:Fs)+temp_slow_Waves(nW,5))<length(temp_data)
+                    temp=temp_data(nE,(-0.25*Fs:Fs)+temp_slow_Waves(nW,5));
+                    temp=temp-mean(temp(1:0.25*Fs));
+                    if max(abs(temp))<150
+                        ERP_SW{nE}=[ERP_SW{nE} ; temp];
+                    end
+                end
+            end
         end
-
-        table_length=size(SW_table,1);
-        SW_table.SubID(table_length+(1:length(chan_labels)))=repmat({SubID},length(chan_labels),1);
-        SW_table.GroupID(table_length+(1:length(chan_labels)))=repmat({GroupID},length(chan_labels),1);
-        SW_table.Block(table_length+(1:length(chan_labels)))=repmat(BlockInfo(nB,4),length(chan_labels),1);
-        SW_table.Elec(table_length+(1:length(chan_labels)))=chan_labels;
-        SW_table.SW_density(table_length+(1:length(chan_labels)))=slow_Waves_perE(:,1);
-        SW_table.SW_amplitude(table_length+(1:length(chan_labels)))=slow_Waves_perE(:,2);
-        SW_table.SW_frequency(table_length+(1:length(chan_labels)))=slow_Waves_perE(:,3);
-        SW_table.SW_downslope(table_length+(1:length(chan_labels)))=slow_Waves_perE(:,4);
-        SW_table.SW_upslope(table_length+(1:length(chan_labels)))=slow_Waves_perE(:,5);
-        SW_table.SW_threshold(table_length+(1:length(chan_labels)))=thr_Wave';
-        SW_table.BlockDuration(table_length+(1:length(chan_labels)))=repmat(BlockInfo(nB,3) ,length(chan_labels),1);
     end
-    %         table_length=size(allSW_table,1);
-    %         allSW_table.SubID(table_length+(1:length(chan_labels)))=repmat({SubID},length(chan_labels),1);
-    %         allSW_table.GroupID(table_length+(1:length(chan_labels)))=repmat({GroupID},length(chan_labels),1);
-    %         allSW_table.Block(table_length+(1:length(chan_labels)))=repmat(BlockID,length(chan_labels),1);
-    %         allSW_table.Elec(table_length+(1:length(chan_labels)))=chan_labels;
-    %         allSW_table.SW_density(table_length+(1:length(chan_labels)))=allSlow_Waves_perE(:,1);
-    %         allSW_table.SW_amplitude(table_length+(1:length(chan_labels)))=allSlow_Waves_perE(:,2);
-    %         allSW_table.SW_frequency(table_length+(1:length(chan_labels)))=allSlow_Waves_perE(:,3);
-    %         allSW_table.SW_downslope(table_length+(1:length(chan_labels)))=allSlow_Waves_perE(:,4);
-    %         allSW_table.SW_upslope(table_length+(1:length(chan_labels)))=allSlow_Waves_perE(:,5);
-
-end
-%%
-     A=load([path_temp 'SW_individualThreshold_withICA4_subGroups.mat']);
-uniqueSubIDs=unique(SW_table.SubID);
-SW_table.subGroupID=nan(size(SW_table,1),1);
-SW_table.subGroupID=categorical(SW_table.subGroupID);
-for nSub=1:length(uniqueSubIDs)
-    SW_table.subGroupID(SW_table.SubID==uniqueSubIDs(nSub))=unique(A.SW_table.subGroupID(A.SW_table.SubID==uniqueSubIDs(nSub)));
-end
-
-writetable(SW_table,[path_save filesep 'SW_individualThreshold_acrossBlocks.csv'])
-% writetable(allSW_table,[path_save filesep 'SW_noThreshold.csv'])
-
-%%
-cfg = [];
-cfg.channel = CommonChannels;
-cfg.center = 'yes';
-cfg.layout = 'biosemi64.lay';
-layout = ft_prepare_layout(cfg);
-
-%%
-uniqueGroups=unique(SW_table.subGroupID);
-figure;
-    temp_topo=[];
-for nG=1:length(uniqueGroups)
-    subplot(1,length(uniqueGroups)+1,nG)
-    for nCh=1:length(layout.label)-2
-        temp_topo(nG,nCh)=nanmean(SW_table.SW_density((SW_table.Elec==layout.label{nCh}) & (SW_table.subGroupID==uniqueGroups(nG))));
+    nFc=nFc+1;
+    for nE=1:length(chan_labels)
+        if size(ERP_SW{nE},1)<30
+            mean_ERP_SW(nFc,nE,:)=nan(1,length((-0.25*Fs:Fs)));
+        else
+            mean_ERP_SW(nFc,nE,:)=nanmean(ERP_SW{nE},1);
+        end
     end
-    simpleTopoPlot_ft(temp_topo(nG,:)', layout,'labels',[],0,1);
-    colorbar;
-    title(uniqueGroups(nG))
-end
-for nG=1:length(uniqueGroups)
-    subplot(1,length(uniqueGroups)+1,nG)
-caxis([min(min(temp_topo)) max(max(temp_topo))]);
-end
+    mean_ERP_Cond{nFc}=GroupID;
 
-    subplot(1,length(uniqueGroups)+1,length(uniqueGroups)+1)
-    simpleTopoPlot_ft(temp_topo(3,:)'-temp_topo(2,:)', layout,'labels',[],0,1);
-    colorbar;
-caxis([-1 1]*max(max(abs(temp_topo(3,:)'-temp_topo(2,:)'))));
+end
+%%
+myChannels={'Fz','Cz','Pz','Oz'};
+cmap=cbrewer('qual','Set2',3);
+figure('Position',[440     9   782   788]); hb=[];
+for nP=1:length(myChannels)
+    subplot(2,2,nP);
+    hold on;
+    xTime=(-0.25*Fs:Fs)/Fs;
+    temp_plot=squeeze(rms(mean_ERP_SW(match_str(mean_ERP_Cond,'healthy_old'),match_str(chan_labels,myChannels{nP}),:),2));
+    [~, hb(1)]=simpleTplot(xTime,temp_plot,0,cmap(1,:),0,'-',0.5,1,[],1,[]);
+
+    temp_plot=squeeze(mean_ERP_SW(match_str(mean_ERP_Cond,'neglect'),match_str(chan_labels,myChannels{nP}),:),2);
+    [~, hb(2)]=simpleTplot(xTime,temp_plot,0,cmap(2,:),0,'-',0.5,1,[],1,[]);
+    xlim([-0.25 1])
+    ylim([-10 5])
+    format_fig;
+    xlabel('time from onset (s)')
+    ylabel('\muV')
+    title(myChannels{nP})
+    if nP==1
+        legend(hb,{'healthy','neglect'})
+    end
+end
 
 %%
-figure;
-    temp_topo=[];
-for nG=1:length(uniqueGroups)
-    subplot(1,length(uniqueGroups)+1,nG)
-    for nCh=1:length(layout.label)-2
-        temp_topo(nG,nCh)=nanmean(SW_table.SW_threshold((SW_table.Elec==layout.label{nCh}) & (SW_table.subGroupID==uniqueGroups(nG))));
-    end
-    simpleTopoPlot_ft(temp_topo(nG,:)', layout,'labels',[],0,1);
-    colorbar;
-end
-for nG=1:length(uniqueGroups)
-    subplot(1,length(uniqueGroups)+1,nG)
-caxis([min(min(temp_topo)) max(max(temp_topo))]);
-end
-    subplot(1,length(uniqueGroups)+1,length(uniqueGroups)+1)
-    simpleTopoPlot_ft(temp_topo(3,:)'-temp_topo(2,:)', layout,'labels',[],0,1);
-    colorbar;
-caxis([-1 1]*max(max(abs(temp_topo(3,:)'-temp_topo(2,:)'))));
+figure; hb=[];
+hold on;
+xTime=(-0.25*Fs:Fs)/Fs;
+temp_plot=squeeze(std(mean_ERP_SW(match_str(mean_ERP_Cond,'healthy_old'),:,:),[],2));
+[~, hb(1)]=simpleTplot(xTime,temp_plot,0,cmap(1,:),0,'-',0.5,1,[],1,[]);
+
+temp_plot=squeeze(std(mean_ERP_SW(match_str(mean_ERP_Cond,'neglect'),:,:),[],2));
+[~, hb(2)]=simpleTplot(xTime,temp_plot,0,cmap(2,:),0,'-',0.5,1,[],1,[]);
+xlim([-0.25 1])
+% ylim([-10 5])
+format_fig;
+xlabel('time from onset (s)')
+ylabel('\muV')
+title('GFP')
+    legend(hb,{'healthy','neglect'})

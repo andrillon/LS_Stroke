@@ -170,7 +170,7 @@ for nCh=1:length(layout.label)-2
 end
 
 %% Filter clusters
-clus_alpha=0.2;
+clus_alpha=0.1;
 montecarlo_alpha=0.05;
 
 cfg_neighb=[];
