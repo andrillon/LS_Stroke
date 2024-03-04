@@ -160,10 +160,10 @@ for nP=1:length(myChannels)
     subplot(2,2,nP);
     hold on;
     xTime=(-0.25*Fs:Fs)/Fs;
-    temp_plot=squeeze(rms(mean_ERP_SW(match_str(mean_ERP_Cond,'healthy_old'),match_str(chan_labels,myChannels{nP}),:),2));
+    temp_plot=squeeze(mean_ERP_SW(match_str(mean_ERP_Cond,'healthy_old'),match_str(chan_labels,myChannels{nP}),:));
     [~, hb(1)]=simpleTplot(xTime,temp_plot,0,cmap(1,:),0,'-',0.5,1,[],1,[]);
 
-    temp_plot=squeeze(mean_ERP_SW(match_str(mean_ERP_Cond,'neglect'),match_str(chan_labels,myChannels{nP}),:),2);
+    temp_plot=squeeze(mean_ERP_SW(match_str(mean_ERP_Cond,'neglect'),match_str(chan_labels,myChannels{nP}),:));
     [~, hb(2)]=simpleTplot(xTime,temp_plot,0,cmap(2,:),0,'-',0.5,1,[],1,[]);
     xlim([-0.25 1])
     ylim([-10 5])
