@@ -51,9 +51,36 @@ for idx = 1:length(IDs)
             continue;
         end
     end
-    merged_all_Waves=[];
+
+    for nF=1:length(file_names)
+        %%% load data
+        load([file_names(nF).folder filesep file_names(nF).name]);
+        a = length(EEG_120Hz.event);
+        newTypeValues = repmat(['block_', num2str(nF)], a, 1);
+        for i = 1:a
+            EEG_120Hz.event(i).block = newTypeValues(i,:);
+        end
+        % Save EEG for each block type for each participant
+        [ALLEEG, EEG] = eeg_store(ALLEEG,EEG_120Hz);
+    end
+    % Merge all blocks for each subject
+    EEG = pop_mergeset(  ALLEEG, 1:length(file_names), 0);
+    EEG.chanlocs = rmfield(EEG.chanlocs, 'type');
+    EEG = pop_tesa_fastica( EEG, 'approach', 'symm', 'g', 'tanh', 'stabilization', 'off' );
+    EEG= pop_tesa_compselect( EEG,'compCheck','off','comps',[],'figSize','small','plotTimeX',[0 500],'plotFreqX',[1 100],'tmsMuscle',...
+        'off','tmsMuscleThresh',8,'tmsMuscleWin',[11 30],'tmsMuscleFeedback','off','blink','on','blinkThresh',2.5,'blinkElecs',{'Fp1','Fp2'},...
+        'blinkFeedback','off','move','on','moveThresh',2,'moveElecs',{'F7','F8'},'moveFeedback','off','muscle','off','muscleThresh',-0.3,...
+        'muscleFreqWin',[30 100],'muscleFreqIn',[7 75],'muscleFeedback','off','elecNoise','on','elecNoiseThresh',4,'elecNoiseFeedback','off' );
+    boundaries=[1 match_str({EEG.event.type},'boundary')' length({EEG.event.type})];
+    evt_lat=[EEG.event.latency];
+    samples_boundaries=[1 evt_lat(match_str({EEG.event.type},'boundary')) size(EEG.data,2)];
+    all_samples=[EEG.event.latency];
+    chan_labels={EEG_120Hz.chanlocs.labels};
+        Fs=EEG_120Hz.srate;
+
     Duration=[];
     BlockInfo=[];
+    merged_all_Waves=[];
     for nF=1:length(file_names)
         FileName=file_names(nF).name;
         separators=findstr(FileName,'_');
@@ -120,10 +147,15 @@ for idx = 1:length(IDs)
     ERP_SW=cell(1,length(chan_labels));
     ERP_SW_avref=cell(1,length(chan_labels));
     for nB=1:size(BlockInfo,1)
-        load([file_names(BlockInfo(nB,1)).folder filesep file_names(BlockInfo(nB,1)).name]);
-        chan_labels={EEG_120Hz.chanlocs.labels};
-        data=EEG_120Hz.data;
-        Fs=EEG_120Hz.srate;
+        beg=samples_boundaries(BlockInfo(nB,1));
+        ed=samples_boundaries(BlockInfo(nB,1)+1);
+        if (beg-round(beg))~=0
+            beg=floor(beg)+1;
+        end
+        if (ed-round(ed))~=0
+            ed=floor(ed);
+        end
+        data=EEG.data(:,beg:ed);
         temp_data=data-repmat(mean(data(match_str(chan_labels,{'TP7','TP8'}),:),1),[length(chan_labels) 1]);
         temp_data2=data-repmat(mean(data,1),[length(chan_labels) 1]);
         for nE=1:length(chan_labels)
@@ -162,28 +194,32 @@ for idx = 1:length(IDs)
 
 end
 %%
-myChannels={'Fz','Cz','Pz','Oz'};
+myChannels=chan_labels; %{'Fz','Cz','Pz','Oz'};
 cmap=cbrewer('qual','Set2',3);
-figure('Position',[440     9   782   788]); hb=[];
+% figure('Position',[440     9   782   788]); hb=[];
 for nP=1:length(myChannels)
-    subplot(2,2,nP);
+%     subplot(2,2,nP);
+figure;
     hold on;
     
     xTime=(-0.25*Fs:Fs)/Fs;
-    temp_plot=squeeze(mean_ERP_SW(match_str(mean_ERP_Cond,'healthy_old'),match_str(chan_labels,myChannels{nP}),:));
-    [~, hb(1)]=simpleTplot(xTime,temp_plot,0,cmap(1,:),0,'-',0.5,1,[],1,[]);
+    temp_plot1=squeeze(mean_ERP_SW(match_str(mean_ERP_Cond,'healthy_old'),match_str(chan_labels,myChannels{nP}),:));
+    [~, hb(1)]=simpleTplot(xTime,temp_plot1,0,cmap(1,:),0,'-',0.5,1,5,1,[]);
 
-    temp_plot=squeeze(mean_ERP_SW(match_str(mean_ERP_Cond,'neglect'),match_str(chan_labels,myChannels{nP}),:));
-    [~, hb(2)]=simpleTplot(xTime,temp_plot,0,cmap(2,:),0,'-',0.5,1,[],1,[]);
+    temp_plot2=squeeze(mean_ERP_SW(match_str(mean_ERP_Cond,'neglect'),match_str(chan_labels,myChannels{nP}),:));
+    [~, hb(2)]=simpleTplot(xTime,temp_plot2,0,cmap(2,:),0,'-',0.5,1,5,1,[]);
     xlim([-0.25 1])
     ylim([-10 5])
     format_fig;
     xlabel('time from onset (s)')
     ylabel('\muV')
     title(myChannels{nP})
-    if nP==1
+%     if nP==1
         legend(hb,{'healthy','neglect'})
-    end
+%     end
+% data=[temp_plot1 ; temp_plot2];
+% group=[zeros(size(temp_plot1,1),1) ; ones(size(temp_plot1,1),1)];
+% [realpos realneg]=get_cluster_permutation_aov(data,group,0.05,0.05,1000,xTime,'full',[]);    
 end
 
 %%
