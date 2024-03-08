@@ -118,12 +118,14 @@ for idx = 1:length(IDs)
     %%% Get ERP by block
     FileNamesSep=split(file_names(nF).name,'_');
     ERP_SW=cell(1,length(chan_labels));
+    ERP_SW_avref=cell(1,length(chan_labels));
     for nB=1:size(BlockInfo,1)
         load([file_names(BlockInfo(nB,1)).folder filesep file_names(BlockInfo(nB,1)).name]);
         chan_labels={EEG_120Hz.chanlocs.labels};
         data=EEG_120Hz.data;
         Fs=EEG_120Hz.srate;
         temp_data=data-repmat(mean(data(match_str(chan_labels,{'TP7','TP8'}),:),1),[length(chan_labels) 1]);
+        temp_data2=data-repmat(mean(data,1),[length(chan_labels) 1]);
         for nE=1:length(chan_labels)
             temp_slow_Waves=slow_Waves(slow_Waves(:,2)==BlockInfo(nB,4) & slow_Waves(:,3)==nE,:);
             if isempty(temp_slow_Waves)
@@ -134,9 +136,14 @@ for idx = 1:length(IDs)
                 if min((-0.3*Fs:Fs)+temp_slow_Waves(nW,5))>0 && max((-0.3*Fs:Fs)+temp_slow_Waves(nW,5))<length(temp_data)
                     temp=temp_data(nE,(-0.25*Fs:Fs)+temp_slow_Waves(nW,5));
                     temp=temp-mean(temp(1:0.25*Fs));
+
+                    temp2=temp_data2(nE,(-0.25*Fs:Fs)+temp_slow_Waves(nW,5));
+                    temp2=temp2-mean(temp2(1:0.25*Fs));
+
                     if max(abs(temp))<150
                         ERP_SW{nE}=[ERP_SW{nE} ; temp];
-                    end
+                         ERP_SW_avref{nE}=[ERP_SW_avref{nE} ; temp2];
+                   end
                 end
             end
         end
@@ -145,9 +152,11 @@ for idx = 1:length(IDs)
     for nE=1:length(chan_labels)
         if size(ERP_SW{nE},1)<30
             mean_ERP_SW(nFc,nE,:)=nan(1,length((-0.25*Fs:Fs)));
+            mean_ERP_SW_avref(nFc,nE,:)=nan(1,length((-0.25*Fs:Fs)));
         else
             mean_ERP_SW(nFc,nE,:)=nanmean(ERP_SW{nE},1);
-        end
+             mean_ERP_SW_avref(nFc,nE,:)=nanmean(ERP_SW_avref{nE},1);
+       end
     end
     mean_ERP_Cond{nFc}=GroupID;
 
@@ -159,6 +168,7 @@ figure('Position',[440     9   782   788]); hb=[];
 for nP=1:length(myChannels)
     subplot(2,2,nP);
     hold on;
+    
     xTime=(-0.25*Fs:Fs)/Fs;
     temp_plot=squeeze(mean_ERP_SW(match_str(mean_ERP_Cond,'healthy_old'),match_str(chan_labels,myChannels{nP}),:));
     [~, hb(1)]=simpleTplot(xTime,temp_plot,0,cmap(1,:),0,'-',0.5,1,[],1,[]);
@@ -177,14 +187,30 @@ for nP=1:length(myChannels)
 end
 
 %%
+% % Compute the mean voltage across all electrodes for each time point
+% temp_plot=squeeze(std(mean_ERP_SW(match_str(mean_ERP_Cond,'healthy_old'),:,:),[],2));
+% 
+% 
+% % Normalize GFP
+% normalized_gfp = gfp / max(gfp);
+
+
 figure; hb=[];
 hold on;
 xTime=(-0.25*Fs:Fs)/Fs;
-temp_plot=squeeze(std(mean_ERP_SW(match_str(mean_ERP_Cond,'healthy_old'),:,:),[],2));
-[~, hb(1)]=simpleTplot(xTime,temp_plot,0,cmap(1,:),0,'-',0.5,1,[],1,[]);
+temp_plot=squeeze(mean_ERP_SW_avref(match_str(mean_ERP_Cond,'healthy_old'),:,:));
+mean_voltage = nanmean(temp_plot, 2);
+% Compute the GFP for each time point
+gfp = squeeze(sqrt(nanmean((temp_plot - repmat(mean_voltage,[1 size(temp_plot,2) 1])).^2, 2)));
 
-temp_plot=squeeze(std(mean_ERP_SW(match_str(mean_ERP_Cond,'neglect'),:,:),[],2));
-[~, hb(2)]=simpleTplot(xTime,temp_plot,0,cmap(2,:),0,'-',0.5,1,[],1,[]);
+[~, hb(1)]=simpleTplot(xTime,gfp,0,cmap(1,:),0,'-',0.5,1,[],1,[]);
+
+temp_plot=squeeze(mean_ERP_SW_avref(match_str(mean_ERP_Cond,'neglect'),:,:));
+mean_voltage = nanmean(temp_plot, 2);
+% Compute the GFP for each time point
+gfp = squeeze(sqrt(nanmean((temp_plot - repmat(mean_voltage,[1 size(temp_plot,2) 1])).^2, 2)));
+
+[~, hb(2)]=simpleTplot(xTime,gfp,0,cmap(2,:),0,'-',0.5,1,[],1,[]);
 xlim([-0.25 1])
 % ylim([-10 5])
 format_fig;

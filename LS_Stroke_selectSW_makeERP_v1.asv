@@ -124,7 +124,7 @@ for idx = 1:length(IDs)
         data=EEG_120Hz.data;
         Fs=EEG_120Hz.srate;
         temp_data=data-repmat(mean(data(match_str(chan_labels,{'TP7','TP8'}),:),1),[length(chan_labels) 1]);
-        for nE=14 %1:length(chan_labels)
+        for nE=1:length(chan_labels)
             temp_slow_Waves=slow_Waves(slow_Waves(:,2)==BlockInfo(nB,4) & slow_Waves(:,3)==nE,:);
             if isempty(temp_slow_Waves)
                 continue;
@@ -142,20 +142,70 @@ for idx = 1:length(IDs)
         end
     end
     nFc=nFc+1;
-    if size(ERP_SW{nE},1)<30
-        mean_ERP_SW(nFc,nE,:)=nan(1,length((-0.25*Fs:Fs)));
-    else
-        mean_ERP_SW(nFc,nE,:)=nanmean(ERP_SW{nE},1);
+    for nE=1:length(chan_labels)
+        if size(ERP_SW{nE},1)<30
+            mean_ERP_SW(nFc,nE,:)=nan(1,length((-0.25*Fs:Fs)));
+        else
+            mean_ERP_SW(nFc,nE,:)=nanmean(ERP_SW{nE},1);
+        end
     end
     mean_ERP_Cond{nFc}=GroupID;
 
 end
 %%
 myChannels={'Fz','Cz','Pz','Oz'};
-cmap=cbrewer('qual','Set2',2); 
+cmap=cbrewer('qual','Set2',3);
+figure('Position',[440     9   782   788]); hb=[];
 for nP=1:length(myChannels)
-    subplot(2,2,nP)
+    subplot(2,2,nP);
+    hold on;
+    
     xTime=(-0.25*Fs:Fs)/Fs;
-    temp_plot=squeeze(nanmean(mean_ERP_SW(match_str(mean_ERP_Cond,'healthy_old'),match_str(chan_labels,'Cz'),:),1))';
-    simpleTplot(xTime,temp_plot,0,cmap(1,:),0,'-',0.5,1,[],1,4)
+    temp_plot=squeeze(mean_ERP_SW(match_str(mean_ERP_Cond,'healthy_old'),match_str(chan_labels,myChannels{nP}),:));
+    [~, hb(1)]=simpleTplot(xTime,temp_plot,0,cmap(1,:),0,'-',0.5,1,[],1,[]);
+
+    temp_plot=squeeze(mean_ERP_SW(match_str(mean_ERP_Cond,'neglect'),match_str(chan_labels,myChannels{nP}),:));
+    [~, hb(2)]=simpleTplot(xTime,temp_plot,0,cmap(2,:),0,'-',0.5,1,[],1,[]);
+    xlim([-0.25 1])
+    ylim([-10 5])
+    format_fig;
+    xlabel('time from onset (s)')
+    ylabel('\muV')
+    title(myChannels{nP})
+    if nP==1
+        legend(hb,{'healthy','neglect'})
+    end
 end
+
+%%
+% % Compute the mean voltage across all electrodes for each time point
+% temp_plot=squeeze(std(mean_ERP_SW(match_str(mean_ERP_Cond,'healthy_old'),:,:),[],2));
+% 
+% 
+% % Normalize GFP
+% normalized_gfp = gfp / max(gfp);
+
+
+figure; hb=[];
+hold on;
+xTime=(-0.25*Fs:Fs)/Fs;
+temp_plot=squeeze(mean_ERP_SW(match_str(mean_ERP_Cond,'healthy_old'),:,:));
+mean_voltage = nanmean(temp_plot, 2);
+% Compute the GFP for each time point
+gfp = sqrt(nanmean((temp_plot - repmat(mean_voltage,[1 size(temp_plot,2) 1])).^2, 2));
+
+[~, hb(1)]=simpleTplot(xTime,gfp,0,cmap(1,:),0,'-',0.5,1,[],1,[]);
+
+temp_plot=squeeze(std(mean_ERP_SW(match_str(mean_ERP_Cond,'neglect'),:,:),[],2));
+mean_voltage = nanmean(temp_plot, 1);
+% Compute the GFP for each time point
+gfp = sqrt(nanmean((temp_plot - mean_voltage).^2, 1));
+
+[~, hb(2)]=simpleTplot(xTime,gfp,0,cmap(2,:),0,'-',0.5,1,[],1,[]);
+xlim([-0.25 1])
+% ylim([-10 5])
+format_fig;
+xlabel('time from onset (s)')
+ylabel('\muV')
+title('GFP')
+    legend(hb,{'healthy','neglect'})
