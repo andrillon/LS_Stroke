@@ -85,6 +85,16 @@ for idx = 1:length(IDs)
         
         data=EEG1.data;
         Fs=EEG1.srate;
+
+        %start from first stimulus
+        if isnumeric([EEG1.event.type])==1
+            stimEvents=find([EEG1.event.type]==4);
+        else
+            stimEvents=match_str({EEG1.event.type},'4');
+        end
+        this_Sart=EEG1.event(stimEvents(1)).latency; 
+        data=data(:,this_Sart:end);
+
         Duration=size(data,2)/Fs/60;
         FileName=file_names(nF).name;
         separators=findstr(FileName,'_');
@@ -93,11 +103,11 @@ for idx = 1:length(IDs)
         GroupID=FileName(separators(2)+1:separators(end)-1);
         
         %%% Preprocess
-        ferdata=data-repmat(mean(data(match_str(chan_labels,{'TP7','TP8'}),:),1),size(data,1),1);
+        data=data-repmat(mean(data(match_str(chan_labels,{'TP7','TP8'}),:),1),size(data,1),1);
         data=data-mean(data,2);
         
         %%% Detect all slow waves
-        if exist([path_save filesep 'allSW_' file_names(nF).name])==0 || redo==1
+        if exist([path_save filesep 'allSW_trim_' file_names(nF).name])==0 || redo==1
             [twa_results]=twalldetectnew_TA_v2(data,Fs,0);
             all_Waves=[];
             for nE=1:size(data,1)
@@ -131,9 +141,9 @@ for idx = 1:length(IDs)
                 % 14: max amplitude on the slow wave window
                 % 15: min amplitude on the slow wave window
             end
-            save([path_save filesep 'allSW_' file_names(nF).name],'all_Waves','Fs','chan_labels');
+            save([path_save filesep 'allSW_trim_' file_names(nF).name],'all_Waves','Fs','chan_labels');
         else
-            load([path_save filesep 'allSW_' file_names(nF).name]);
+            load([path_save filesep 'allSW_trim_' file_names(nF).name]);
         end
         
         %%% Select slow waves
@@ -165,7 +175,7 @@ for idx = 1:length(IDs)
             end
             slow_Waves=[slow_Waves ; thisE_Waves(temp_p2p>thr_Wave(nE),:)];
         end
-        save([path_save filesep 'SW_' file_names(nF).name],'slow_Waves','Fs','chan_labels');
+        save([path_save filesep 'SW_trim_' file_names(nF).name],'slow_Waves','Fs','chan_labels');
         
         slow_Waves_perE=[];
 %         allSlow_Waves_perE=[];
@@ -181,6 +191,7 @@ for idx = 1:length(IDs)
         SW_table.SubID(table_length+(1:length(chan_labels)))=repmat({SubID},length(chan_labels),1);
         SW_table.GroupID(table_length+(1:length(chan_labels)))=repmat({GroupID},length(chan_labels),1);
         SW_table.Block(table_length+(1:length(chan_labels)))=repmat(BlockID,length(chan_labels),1);
+        SW_table.BlockDuration(table_length+(1:length(chan_labels)))=repmat(Duration,length(chan_labels),1);
         SW_table.Elec(table_length+(1:length(chan_labels)))=chan_labels;
         SW_table.SW_density(table_length+(1:length(chan_labels)))=slow_Waves_perE(:,1);
         SW_table.SW_amplitude(table_length+(1:length(chan_labels)))=slow_Waves_perE(:,2);
@@ -201,5 +212,5 @@ for idx = 1:length(IDs)
         
     end
 end
-writetable(SW_table,[path_save filesep 'SW_individualThreshold.csv'])
+writetable(SW_table,[path_save filesep 'SW_trim_individualThreshold.csv'])
 % writetable(allSW_table,[path_save filesep 'SW_noThreshold.csv'])

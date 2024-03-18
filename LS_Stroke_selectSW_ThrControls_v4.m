@@ -111,7 +111,7 @@ for idx = 1:length(IDs)
     SW_threshold.GroupID(table_length+(1:length(chan_labels)))=repmat({GroupID},length(chan_labels),1);
     SW_threshold.Elec(table_length+(1:length(chan_labels)))=chan_labels;
     SW_threshold.SW_threshold(table_length+(1:length(chan_labels)))=thr_Wave';
-e
+end
 
 %%
 CommonChannels=[];
@@ -207,7 +207,7 @@ for idx = 1:length(IDs)
         SW_table.SW_downslope(table_length+(1:length(chan_labels)))=slow_Waves_perE(:,4);
         SW_table.SW_upslope(table_length+(1:length(chan_labels)))=slow_Waves_perE(:,5);
         SW_table.SW_threshold(table_length+(1:length(chan_labels)))=thr_Wave';
-        SW_table.BlockDuration(table_length+(1:length(chan_labels)))=repmat(BlockInfo(nB,2) ,length(chan_labels),1);
+        SW_table.BlockDuration(table_length+(1:length(chan_labels)))=repmat(BlockInfo(nB,3) ,length(chan_labels),1);
     end
     %         table_length=size(allSW_table,1);
     %         allSW_table.SubID(table_length+(1:length(chan_labels)))=repmat({SubID},length(chan_labels),1);

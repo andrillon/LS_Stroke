@@ -194,12 +194,12 @@ for idx = 1:length(IDs)
 
 end
 %%
-myChannels=chan_labels; %{'Fz','Cz','Pz','Oz'};
+myChannels={'Fz','Cz','Pz','Oz'};
 cmap=cbrewer('qual','Set2',3);
-% figure('Position',[440     9   782   788]); hb=[];
+figure('Position',[440     9   782   788]); hb=[];
 for nP=1:length(myChannels)
-%     subplot(2,2,nP);
-figure;
+    subplot(2,2,nP);
+% figure;
     hold on;
     
     xTime=(-0.25*Fs:Fs)/Fs;
@@ -214,12 +214,12 @@ figure;
     xlabel('time from onset (s)')
     ylabel('\muV')
     title(myChannels{nP})
-%     if nP==1
+    if nP==1
         legend(hb,{'healthy','neglect'})
-%     end
-% data=[temp_plot1 ; temp_plot2];
-% group=[zeros(size(temp_plot1,1),1) ; ones(size(temp_plot1,1),1)];
-% [realpos realneg]=get_cluster_permutation_aov(data,group,0.05,0.05,1000,xTime,'full',[]);    
+    end
+data=[temp_plot1 ; temp_plot2];
+group=[zeros(size(temp_plot1,1),1) ; ones(size(temp_plot1,1),1)];
+[realpos realneg]=get_cluster_permutation_aov(data,group,0.05,0.05,1000,xTime,'full',[]);    
 end
 
 %%

@@ -148,8 +148,14 @@ for idx = 1:length(IDs)
     ERP_SW_avref=cell(1,length(chan_labels));
     for nB=1:size(BlockInfo,1)
         beg=samples_boundaries(BlockInfo(nB,1));
-    en
-        data=EEG.data(:,samples_boundaries(BlockInfo(nB,1)):samples_boundaries(BlockInfo(nB,1)+1));
+        ed=samples_boundaries(BlockInfo(nB,1)+1);
+        if (beg-round(beg))~=0
+            beg=floor(beg)+1;
+        end
+        if (ed-round(ed))~=0
+            ed=floor(ed);
+        end
+        data=EEG.data(:,beg:ed);
         temp_data=data-repmat(mean(data(match_str(chan_labels,{'TP7','TP8'}),:),1),[length(chan_labels) 1]);
         temp_data2=data-repmat(mean(data,1),[length(chan_labels) 1]);
         for nE=1:length(chan_labels)
@@ -211,9 +217,9 @@ figure;
 %     if nP==1
         legend(hb,{'healthy','neglect'})
 %     end
-% data=[temp_plot1 ; temp_plot2];
-% group=[zeros(size(temp_plot1,1),1) ; ones(size(temp_plot1,1),1)];
-% [realpos realneg]=get_cluster_permutation_aov(data,group,0.05,0.05,1000,xTime,'full',[]);    
+data=[temp_plot1 ; temp_plot2];
+group=[zeros(size(temp_plot1,1),1) ; ones(size(temp_plot1,1),1)];
+[realpos realneg]=get_cluster_permutation_aov(data,group,0.05,0.05,1000,xTime,'full',[]);    
 end
 
 %%

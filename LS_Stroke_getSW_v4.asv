@@ -67,6 +67,9 @@ for idx = 1:length(IDs)
             GroupID=FileName(separators(2)+1:separators(end)-1);
 
             %%% Preprocess
+            stimEvents=find([EEG_120Hz.event.type]==4);
+            this_Sart=stimEvents(1); %start from first stimulus
+            data=data(:,this_Sart:end);
             data=data-repmat(mean(data(match_str(chan_labels,{'TP7','TP8'}),:),1),size(data,1),1);
             data=data-mean(data,2);
 
