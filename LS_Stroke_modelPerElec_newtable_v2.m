@@ -18,7 +18,7 @@
      
      load('/Users/thandrillon/WorkGit/projects/inprogress/LS_Stroke/chanlocs_Oxford.mat');
      load('/Users/thandrillon/WorkGit/projects/inprogress/LS_Stroke/chanlocs_Monash.mat');
-     SW_table=readtable([path_temp 'SW_individualThreshold_acrossBlocks.csv']);
+     SW_table=readtable([path_temp 'SW_individualThreshold_acrossBlocks_trim.csv']);
      A=load([path_temp 'SW_individualThreshold_withICA4_subGroups.mat']);
      commonChans=A.commonChans;
 end

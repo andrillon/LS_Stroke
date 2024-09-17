@@ -3,7 +3,7 @@ close all
 clear all
 if isempty(findstr(pwd,'thandrillon'))==0
     path_data = '/Users/thandrillon/Data/StrokeData/EEG';
-    path_save = '/Users/thandrillon/Data/StrokeData/newSWdetection';
+    path_save = '/Users/thandrillon/Data/StrokeData/SWdetection';
     path_LSCPtools='/Users/thandrillon/WorkGit/LSCPtools/';
     path_eeglab='/Users/thandrillon/WorkGit/projects/ext/eeglab/';
     path_TESA='/Users/thandrillon/WorkGit/projects/ext/TESA/';
@@ -63,15 +63,23 @@ for idx = 1:length(IDs)
            fprintf('... %s - %2.0f - %s SKIPPING\n',SubID,BlockID,GroupID)
          continue;
         end
-        if exist([path_save filesep 'allSW_' file_names(nF).name])==0
+        if exist([path_save filesep 'allSW_trim_' file_names(nF).name])==0
             fprintf('... %s - %2.0f - %s MISSING\n',SubID,BlockID,GroupID)
             continue;
         end
-        load([path_save filesep 'allSW_' file_names(nF).name]);
+        load([path_save filesep 'allSW_trim_' file_names(nF).name(1:end-4)]);
         merged_all_Waves=[merged_all_Waves ; double(all_Waves)];
         load([file_names(nF).folder filesep file_names(nF).name]);
         chan_labels={EEG_120Hz.chanlocs.labels};
         data=EEG_120Hz.data;
+         %start from first stimulus
+        if isnumeric([EEG_120Hz.event.type])==1
+            stimEvents=find([EEG_120Hz.event.type]==4);
+        else
+            stimEvents=match_str({EEG_120Hz.event.type},'4');
+        end
+        this_Sart=EEG_120Hz.event(stimEvents(1)).latency; 
+        data=data(:,this_Sart:end);
         Fs=EEG_120Hz.srate;
         Duration(nF)=size(data,2)/Fs/60;
         fprintf('... %s - %2.0f - %s - %g - %g\n',SubID,BlockID,GroupID,length(chan_labels),Duration(nF))
@@ -157,7 +165,7 @@ for nSub=1:length(uniqueSubIDs)
     SW_table.subGroupID(SW_table.SubID==uniqueSubIDs(nSub))=unique(A.SW_table.subGroupID(A.SW_table.SubID==uniqueSubIDs(nSub)));
 end
 
-writetable(SW_table,[path_save filesep 'SW_individualThreshold_acrossBlocks.csv'])
+writetable(SW_table,[path_save filesep 'SW_individualThreshold_acrossBlocks_trim.csv'])
 % writetable(allSW_table,[path_save filesep 'SW_noThreshold.csv'])
 
 %%

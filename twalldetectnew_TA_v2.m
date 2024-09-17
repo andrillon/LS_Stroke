@@ -20,7 +20,7 @@ fs=128; %sampling rate changes for decimated signal
 Wp=[1.0 10.0]/(fs/2); % Filtering parameters
 Ws=[0.1 15]/(fs/2); % Filtering parameters
 Rp=3;
-Rs=25;
+Rs=50;
 [n, Wn]=cheb2ord(Wp,Ws,Rp,Rs);
 [bbp,abp]=cheby2(n,Rs,Wn); % Loses no more than 3 dB in pass band and has at least 10 dB attenuation in stop band
 clear pass* stop* Rp Rs W* n;

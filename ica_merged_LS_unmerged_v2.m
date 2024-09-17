@@ -9,7 +9,7 @@ if isempty(findstr(pwd,'thandrillon'))==0
     path_TESA='/Users/thandrillon/WorkGit/projects/ext/TESA/';
 addpath(path_eeglab);
 addpath(path_TESA);
-addpath(genpath('/Users/thandrillon/Work/local/FastICA_25/'))
+addpath(genpath('/Users/thandrillon/WorkLocal/local/FastICA_25/'))
 elseif isempty(findstr(pwd,'Daniel'))==0
     path_data = '/fs04/so34/Daniel/Data/Raw';
     path_save = '/fs04/so34/Daniel/Data/SWdetection';
@@ -26,7 +26,7 @@ IDs = {'HN996'; 'HN968'; 'HN969'; 'HN970'; 'HN971'; 'HN972'; 'HN973'; 'HN974'; '
     'S111'; 'S112'; 'S114'; 'S115'; 'S201'; 'S202'; 'S207' }; 
     
     %%
-    redo=0;
+    redo=1;
     
     SW_table=array2table(zeros(0,9),'VariableNames',{'SubID','GroupID','Elec','Block','SW_density','SW_amplitude','SW_frequency','SW_downslope','SW_upslope'});
     SW_table.SubID=categorical(SW_table.SubID);
@@ -141,9 +141,9 @@ for idx = 1:length(IDs)
                 % 14: max amplitude on the slow wave window
                 % 15: min amplitude on the slow wave window
             end
-            save([path_save filesep 'allSW_trim_' file_names(nF).name],'all_Waves','Fs','chan_labels');
+            save([path_save filesep 'allSW_trim_' file_names(nF).name '_newfilt'],'all_Waves','Fs','chan_labels');
         else
-            load([path_save filesep 'allSW_trim_' file_names(nF).name]);
+            load([path_save filesep 'allSW_trim_' file_names(nF).name '_newfilt']);
         end
         
         %%% Select slow waves
@@ -212,5 +212,5 @@ for idx = 1:length(IDs)
         
     end
 end
-writetable(SW_table,[path_save filesep 'SW_trim_individualThreshold.csv'])
+writetable(SW_table,[path_save filesep 'SW_trim_individualThreshold_newfilt.csv'])
 % writetable(allSW_table,[path_save filesep 'SW_noThreshold.csv'])
