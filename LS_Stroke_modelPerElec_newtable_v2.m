@@ -18,7 +18,8 @@
      
      load('/Users/thandrillon/WorkGit/projects/inprogress/LS_Stroke/chanlocs_Oxford.mat');
      load('/Users/thandrillon/WorkGit/projects/inprogress/LS_Stroke/chanlocs_Monash.mat');
-     SW_table=readtable([path_temp 'SW_5uVThreshold_acrossBlocks_trim.csv']);
+     SW_table=readtable([path_temp 'SW_individualThreshold_acrossBlocks_trim.csv']);
+%      load([path_temp 'SW_individualThreshold_withICA4_subGroups.mat']);
      A=load([path_temp 'SW_individualThreshold_withICA4_subGroups.mat']);
      commonChans=A.commonChans;
 end
@@ -231,3 +232,25 @@ for nCond=1
     colormap(cmap2);
     title(Cond2{nCond})
 end
+
+%%
+table_res=[];
+uniqueGr=unique(SW_table.GroupID);
+for nBlock=1:9
+    for nGr=1:2
+        temp=SW_table.SW_density(SW_table.Block==nBlock & SW_table.GroupID==uniqueGr(nGr));
+        tempID=SW_table.SubID(SW_table.Block==nBlock & SW_table.GroupID==uniqueGr(nGr));
+        table_res(nBlock,nGr)=nanmean(grpstats(temp,tempID));
+        table_res_sem(nBlock,nGr)=sem(grpstats(temp,tempID));
+    end
+end
+
+figure; hold on;
+for nGr=1:2
+    errorbar(1:9,table_res(:,nGr)',table_res_sem(:,nGr)')
+end
+xlim([0.5 9.5])
+format_fig;
+xlabel('Block')
+legend({'controls','patients'})
+ylabel('SWD')
