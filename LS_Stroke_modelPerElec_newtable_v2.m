@@ -233,7 +233,31 @@ for nCond=1
     title(Cond2{nCond})
 end
 
-%%
+%% NEW MODEL COMPARISON
+SW_table(~ismember(SW_table.Elec,cfg.channel),:)=[];
+SW_table.Elec=removecats(SW_table.Elec);
+SW_table(SW_table.BlockDuration>(mean(SW_table.BlockDuration)+3*std(SW_table.BlockDuration)),:)=[];
+
+mdl0=fitlme(SW_table,'SW_threshold~1+Elec+(1|SubID)');
+mdl1=fitlme(SW_table,'SW_threshold~1+Elec+Block+(1|SubID)');
+mdl2=fitlme(SW_table,'SW_threshold~1+Elec*Block+(1|SubID)');
+mdl3=fitlme(SW_table,'SW_threshold~1+Elec*Block+GroupID+(1|SubID)');
+mdl4=fitlme(SW_table,'SW_threshold~1+Elec*Block*GroupID+(1|SubID)');
+compare(mdl0,mdl1) %WINNING: mdl0
+compare(mdl1,mdl2)
+compare(mdl2,mdl3)
+compare(mdl3,mdl4)
+
+mdl0=fitlme(SW_table,'SW_density~1+Elec+(1|SubID)');
+mdl1=fitlme(SW_table,'SW_density~1+Elec+Block+(1|SubID)');
+mdl2=fitlme(SW_table,'SW_density~1+Elec*Block+(1|SubID)');
+mdl3=fitlme(SW_table,'SW_density~1+Elec*Block+GroupID+(1|SubID)');
+mdl4=fitlme(SW_table,'SW_density~1+Elec*Block*GroupID+(1|SubID)');
+compare(mdl0,mdl1)
+compare(mdl1,mdl2)
+compare(mdl2,mdl3)
+compare(mdl3,mdl4) %WINNING: mdl3
+
 table_res=[];
 uniqueGr=unique(SW_table.GroupID);
 for nBlock=1:9
@@ -253,4 +277,4 @@ xlim([0.5 9.5])
 format_fig;
 xlabel('Block')
 legend({'controls','patients'})
-ylabel('SWD')
+ylabel('SWDW')
